@@ -71,6 +71,7 @@ public class Main {
         });
 
         gateway.on(ReadyEvent.class).subscribe((rdy) -> {
+            log.info("Discord Ready event received.");
             client.getCoreResources().getReactorResources().getTimerTaskScheduler().schedulePeriodically(() -> {
                 pool.submit(post);
             }, 0, 2, TimeUnit.HOURS);
