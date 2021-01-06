@@ -42,6 +42,8 @@ public class ProxyGetter {
             return  hasProxy && rec.getLoad() < conf.getMaxLoadFactor() && !Strings.isNullOrEmpty(status) && status.equalsIgnoreCase("online");
         }).collect(Collectors.toList()));
 
+        Main.log.info(String.format("Got %d proxies from Recommendations list.", recs != null ? recs.size() : 0));
+
         if(recs.size() == 0)
             return null;
 
@@ -68,19 +70,23 @@ public class ProxyGetter {
         String text = null;
 
         try {
+            Main.log.info("Testing proxy " + hostname);
             Process p = Runtime.getRuntime().exec(req);
             int retval = p.waitFor();
             if(retval == 0)
                 text = new BufferedReader(new InputStreamReader(p.getInputStream(), StandardCharsets.UTF_8)).lines()
                         .collect(Collectors.joining("\n"));
             if(!Strings.isNullOrEmpty(text)) {
+                Main.log.info("Proxy works!");
                 return true;
             }
             else {
+                Main.log.info("Proxy doesn't work!");
                 return false;
             }
         }
         catch(Exception e) {
+            Main.log.info("Exception received trying to test proxy!");
             return false;
         }
     }

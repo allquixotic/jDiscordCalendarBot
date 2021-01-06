@@ -68,7 +68,6 @@ public class EventScraper {
         browser = ff.launch(lo);
         context = browser.newContext();
 
-        //com.github.allquixotic.jDiscordCalendarBot.ProxyGetter
         proxy = new ProxyGetter(conf);
     }
 
@@ -78,7 +77,11 @@ public class EventScraper {
 
     public Calen getCalendar(LocalDate when, boolean forceUpdate) {
         if(forceUpdate || lastRun == null || lastRun.get().isBefore(LocalDateTime.now().minusSeconds(conf.getUpdateFrequency()))) {
+            Main.log.info("Need to update.");
             update();
+        }
+        else {
+            Main.log.info("No calendar update needed.");
         }
 
         return events.get(when);
@@ -96,7 +99,9 @@ public class EventScraper {
                 //Proxy selection - use existing unless it doesn't test successfully
                 if(currentProxy == null || !proxy.testProxy(currentProxy)) {
                     try {
+                        Main.log.info("Grabbing a new proxy.");
                         currentProxy = proxy.getRandomProxy();
+                        Main.log.info(String.format("Got proxy %s", currentProxy));
                     }
                     catch(IOException ioe) {
                         Main.logSevere(ioe);

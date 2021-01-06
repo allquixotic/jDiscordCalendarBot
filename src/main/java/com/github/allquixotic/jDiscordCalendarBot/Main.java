@@ -4,6 +4,8 @@ import com.google.api.client.util.Strings;
 import discord4j.common.util.Snowflake;
 import discord4j.core.DiscordClient;
 import discord4j.core.event.domain.lifecycle.ReadyEvent;
+import discord4j.gateway.intent.Intent;
+import discord4j.gateway.intent.IntentSet;
 import lombok.val;
 
 import java.io.IOException;
@@ -21,12 +23,14 @@ public class Main {
     public static void main(String[] args) throws IOException {
         val conf = args.length == 0 ? Config.readConfig() : Config.readConfig(args[0]);
         val client = DiscordClient.create(conf.getDiscordSecret());
-        val gateway = client.login().block();
+        val gateway = client.gateway().setEnabledIntents(IntentSet.of(Intent.GUILDS)).login().block();
         val pool = Executors.newCachedThreadPool();
         val scraper = new EventScraper(conf);
 
         final Runnable post = () -> {
+            log.info("Processing update...");
             val chan = gateway.getChannelById(Snowflake.of(conf.getDiscordChannel())).block();
+            log.info("Got the channel we're working on.");
             val calens = new Calen[] {
                     scraper.getCalendar(LocalDate.now().minusDays(2)),
                     scraper.getCalendar(LocalDate.now().minusDays(1)),
