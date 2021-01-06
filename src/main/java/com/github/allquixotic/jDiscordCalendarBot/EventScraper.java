@@ -308,7 +308,7 @@ public class EventScraper {
 
     @Data
     @Builder
-    private class MyDay {
+    private static class MyDay {
         ElementHandle element;
         int dayOfMonth;
         Integer month;
