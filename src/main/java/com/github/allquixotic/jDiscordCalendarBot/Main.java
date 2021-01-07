@@ -79,7 +79,7 @@ public class Main {
                 val obs = scraper.getCalendar(LocalDate.now().minusDays(2));
                 val obsolete = obs.getMessageId();
                 val om = gateway.getMessageById(Snowflake.of(conf.getDiscordChannel()), Snowflake.of(obsolete)).block();
-                om.delete();
+                om.getRestMessage().delete("Obsolete message deleted by Calendar bot").block();
                 obs.setMessageId(null);
                 scraper.updateCalen(obs.getDate(), obs);
             }
