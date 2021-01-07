@@ -15,7 +15,7 @@ public class Evt implements Serializable, Comparable<Evt> {
 
     @Override
     public String toString() {
-        return String.format("\"%s\" %sat %s", name, recurs ? "(recurring) " : "", time.format(EventScraper.hmma));
+        return String.format("\"%s\" %sat %s ET", name, recurs ? "(recurring) " : "", time.format(EventScraper.hmma));
     }
 
     @Override
