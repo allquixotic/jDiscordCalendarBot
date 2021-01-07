@@ -22,13 +22,13 @@ public class Calen implements Serializable {
         val sb = new StringBuilder();
         sb.append("Here is ");
         if(date.equals(LocalDate.now())) {
-            sb.append("**TODAY**, ");
+            sb.append("\uD83D\uDCCC **TODAY**, ");
         }
         else if(date.equals(LocalDate.now().plusDays(1L))) {
-            sb.append("TOMORROW, ");
+            sb.append("\uD83D\uDD1C TOMORROW, ");
         }
         else if(date.equals(LocalDate.now().minusDays(1L))) {
-            sb.append("YESTERDAY, ");
+            sb.append("\uD83D\uDD19 YESTERDAY, ");
         }
 
         sb.append(date.format(fmt));
