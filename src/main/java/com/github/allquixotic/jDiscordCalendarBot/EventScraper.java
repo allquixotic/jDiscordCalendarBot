@@ -234,9 +234,11 @@ public class EventScraper {
                                             //Put event in existing Calen
                                             if(events.get(dd) == null) {
                                                 //Main.log.info("Putting new Calen for existing key " + dd.toString());
+                                                val ar = new ArrayList<Evt>();
+                                                ar.add(evt);
                                                 events.put(dd, Calen.builder()
                                                         .date(dd)
-                                                        .events(SetUniqueList.setUniqueList(Arrays.asList(evt)))
+                                                        .events(SetUniqueList.setUniqueList(ar))
                                                         .build());
                                             }
                                             else {
@@ -253,9 +255,11 @@ public class EventScraper {
                                         else {
                                             //New Calen needed
                                             //Main.log.info("Putting new Calen for non-existent key " + dd.toString());
+                                            val ar = new ArrayList<Evt>();
+                                            ar.add(evt);
                                             events.put(dd, Calen.builder()
                                                     .date(dd)
-                                                    .events(SetUniqueList.setUniqueList(Arrays.asList(evt)))
+                                                    .events(SetUniqueList.setUniqueList(ar))
                                                     .build());
                                         }
                                     }
