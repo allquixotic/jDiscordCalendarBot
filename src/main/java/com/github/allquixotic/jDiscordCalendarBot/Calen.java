@@ -3,6 +3,7 @@ package com.github.allquixotic.jDiscordCalendarBot;
 import lombok.Builder;
 import lombok.Data;
 import lombok.val;
+import org.apache.commons.collections4.list.SetUniqueList;
 
 import java.io.Serializable;
 import java.time.LocalDate;
@@ -13,7 +14,7 @@ import java.util.TreeSet;
 public class Calen implements Serializable {
     private LocalDate date;
     private String messageId;
-    private TreeSet<Evt> events;
+    private SetUniqueList<Evt> events;
 
     private static final DateTimeFormatter fmt = DateTimeFormatter.ofPattern("EEEE MM/dd/YYYY");
 

@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
 import lombok.val;
+import org.apache.commons.collections4.list.SetUniqueList;
 import org.mapdb.*;
 
 import java.io.IOException;
@@ -235,7 +236,7 @@ public class EventScraper {
                                                 //Main.log.info("Putting new Calen for existing key " + dd.toString());
                                                 events.put(dd, Calen.builder()
                                                         .date(dd)
-                                                        .events(Sets.newTreeSet(Arrays.asList(evt)))
+                                                        .events(SetUniqueList.setUniqueList(Arrays.asList(evt)))
                                                         .build());
                                             }
                                             else {
@@ -243,7 +244,7 @@ public class EventScraper {
                                                 var caln = events.get(dd);
                                                 var evts = caln.getEvents();
                                                 if (evts == null) {
-                                                    evts = new TreeSet<>();
+                                                    evts = SetUniqueList.setUniqueList(new ArrayList<>());
                                                 }
                                                 evts.add(evt);
                                                 events.put(dd, caln);
@@ -254,7 +255,7 @@ public class EventScraper {
                                             //Main.log.info("Putting new Calen for non-existent key " + dd.toString());
                                             events.put(dd, Calen.builder()
                                                     .date(dd)
-                                                    .events(Sets.newTreeSet(Arrays.asList(evt)))
+                                                    .events(SetUniqueList.setUniqueList(Arrays.asList(evt)))
                                                     .build());
                                         }
                                     }
@@ -299,8 +300,18 @@ public class EventScraper {
                                 .build();
                     });
 
-                    //TODO: Sort each day's events by their time
-
+                    //Sort each day's events by their time
+                    for(LocalDate key : events.keySet()) {
+                        var calen = events.get(key);
+                        if(calen != null) {
+                            var evts = calen.getEvents();
+                            if(evts != null) {
+                                evts.sort(Comparator.comparing(Evt::getTime));
+                            }
+                            calen.setEvents(evts);
+                            updateCalen(key, calen);
+                        }
+                    }
                 }
                 else {
                     throw new RuntimeException("ERROR: Wasn't able to get the current month!");
