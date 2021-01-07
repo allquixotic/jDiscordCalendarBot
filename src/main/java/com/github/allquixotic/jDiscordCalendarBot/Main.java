@@ -54,7 +54,7 @@ public class Main {
                             if(!calen.toString().trim().equalsIgnoreCase(theMsg)) {
                                 log.info("Updating message for " + calen.getDate().format(DateTimeFormatter.ISO_LOCAL_DATE));
                                 var rm = chan.getRestChannel().getRestMessage(Snowflake.of(calen.getMessageId()));
-                                rm.edit(MessageEditRequest.builder().content(calen.toString()).build());
+                                rm.edit(MessageEditRequest.builder().content(calen.toString()).build()).block();
                             }
                         }
                         catch(Exception e) {
