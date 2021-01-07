@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class ProxyGetter {
     private Config conf = null;
@@ -67,16 +68,25 @@ public class ProxyGetter {
     }
 
     public boolean testProxy(String hostname) {
-        String silent = Strings.isNullOrEmpty(conf.getSilent()) ? "-s" : conf.getSilent().equalsIgnoreCase("false") ? "" : "-s";
-        String req = String.format("%s -f %s -k %s --proxy-anyauth -x https://%s:%d -U \"%s:%s\" https://www.google.com/ncr",
-                Strings.isNullOrEmpty(conf.getCurlPath()) ? "curl" : conf.getCurlPath(),
-                silent,
-                Strings.isNullOrEmpty(conf.getCurlExtra()) ? "" : conf.getCurlExtra(),
-                hostname,
-                conf.getProxyPort() == 0 ? 89 : conf.getProxyPort(),
-                conf.getProxyUsername(),
-                conf.getProxyPassword());
-        Main.log.info("Executing " + req);
+        val silent = Strings.isNullOrEmpty(conf.getSilent()) ? "-s" : conf.getSilent().equalsIgnoreCase("false") ? "" : "-s";
+        val curlPath = Strings.isNullOrEmpty(conf.getCurlPath()) ? "curl" : conf.getCurlPath();
+        val curlExtra = (conf.getCurlExtra() == null || conf.getCurlExtra().length == 0) ? new String[]{""} : conf.getCurlExtra();
+        val proxyUrl = String.format("https://%s:%d", hostname, conf.getProxyPort() == 0 ? 89 : conf.getProxyPort());
+        val proxyAuth = String.format("%s:%s", conf.getProxyUsername(), conf.getProxyPassword());
+        val testUrl = Strings.isNullOrEmpty(conf.getTestUrl()) ? "https://www.google.com/ncr" : conf.getTestUrl();
+        val req = Stream.of(new String[] {
+                curlPath,
+                "-f", "-k", "--proxy-anyauth",
+                silent},
+                curlExtra,
+                new String[] {
+                "-x",
+                proxyUrl,
+                "-U",
+                proxyAuth,
+                testUrl
+        }).flatMap(Stream::of).toArray(String[]::new);
+        Main.log.info("Executing " + String.join(" ", req));
         String text = null;
 
         try {

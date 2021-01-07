@@ -202,7 +202,7 @@ public class EventScraper {
                             }
                         }
                         day.setDate(LocalDate.of(day.getYear(), day.getMonth(), day.getDayOfMonth()));
-                        Main.log.info("Found date " + day.toString());
+                        //Main.log.info("Found date " + day.toString());
                     }
 
                     //Get all the event box elements from the page
@@ -232,14 +232,14 @@ public class EventScraper {
                                         if(events.containsKey(dd)) {
                                             //Put event in existing Calen
                                             if(events.get(dd) == null) {
-                                                Main.log.info("Putting new Calen for existing key " + dd.toString());
+                                                //Main.log.info("Putting new Calen for existing key " + dd.toString());
                                                 events.put(dd, Calen.builder()
                                                         .date(dd)
                                                         .events(Sets.newTreeSet(Arrays.asList(evt)))
                                                         .build());
                                             }
                                             else {
-                                                Main.log.info("Updating Calen for " + dd.toString());
+                                                //Main.log.info("Updating Calen for " + dd.toString());
                                                 var caln = events.get(dd);
                                                 var evts = caln.getEvents();
                                                 if (evts == null) {
@@ -251,7 +251,7 @@ public class EventScraper {
                                         }
                                         else {
                                             //New Calen needed
-                                            Main.log.info("Putting new Calen for non-existent key " + dd.toString());
+                                            //Main.log.info("Putting new Calen for non-existent key " + dd.toString());
                                             events.put(dd, Calen.builder()
                                                     .date(dd)
                                                     .events(Sets.newTreeSet(Arrays.asList(evt)))
