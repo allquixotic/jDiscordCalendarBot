@@ -310,10 +310,12 @@ public class EventScraper {
                         if(calen != null) {
                             var evts = calen.getEvents();
                             if(evts != null) {
-                                evts.sort(Comparator.comparing(Evt::getTime));
+                                //SetUniqueList's ListIterator does not support 'set' method (lazy Apache...)
+                                var arevts = new ArrayList<Evt>(evts);
+                                arevts.sort(Comparator.comparing(Evt::getTime));
+                                calen.setEvents(SetUniqueList.setUniqueList(arevts));
+                                updateCalen(key, calen);
                             }
-                            calen.setEvents(evts);
-                            updateCalen(key, calen);
                         }
                     }
                 }
