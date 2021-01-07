@@ -68,7 +68,7 @@ public class ProxyGetter {
 
     public boolean testProxy(String hostname) {
         String silent = Strings.isNullOrEmpty(conf.getSilent()) ? "-s" : conf.getSilent().equalsIgnoreCase("false") ? "" : "-s";
-        String req = String.format("\"%s\" -f %s -k %s --proxy-anyauth -x https://%s:%d -U \"%s:%s\" https://www.google.com/ncr",
+        String req = String.format("%s -f %s -k %s --proxy-anyauth -x https://%s:%d -U \"%s:%s\" https://www.google.com/ncr",
                 Strings.isNullOrEmpty(conf.getCurlPath()) ? "curl" : conf.getCurlPath(),
                 silent,
                 Strings.isNullOrEmpty(conf.getCurlExtra()) ? "" : conf.getCurlExtra(),
