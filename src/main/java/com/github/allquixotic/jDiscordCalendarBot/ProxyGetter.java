@@ -11,6 +11,7 @@ import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.util.Strings;
 import com.google.common.reflect.TypeToken;
 import lombok.NonNull;
+import lombok.val;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -66,27 +67,37 @@ public class ProxyGetter {
     }
 
     public boolean testProxy(String hostname) {
-        String req = String.format("curl -f -s -k --proxy-anyauth -x https://%s:%d -U \"%s:%s\" https://www.google.com/ncr", hostname, conf.getProxyPort(), conf.getProxyUsername(), conf.getProxyPassword());
+        String silent = Strings.isNullOrEmpty(conf.getSilent()) ? "-s" : conf.getSilent().equalsIgnoreCase("false") ? "" : "-s";
+        String req = String.format("\"%s\" -f %s -k %s --proxy-anyauth -x https://%s:%d -U \"%s:%s\" https://www.google.com/ncr",
+                Strings.isNullOrEmpty(conf.getCurlPath()) ? "curl" : conf.getCurlPath(),
+                silent,
+                Strings.isNullOrEmpty(conf.getCurlExtra()) ? "" : conf.getCurlExtra(),
+                hostname,
+                conf.getProxyPort() == 0 ? 89 : conf.getProxyPort(),
+                conf.getProxyUsername(),
+                conf.getProxyPassword());
+        Main.log.info("Executing " + req);
         String text = null;
 
         try {
             Main.log.info("Testing proxy " + hostname);
             Process p = Runtime.getRuntime().exec(req);
             int retval = p.waitFor();
-            if(retval == 0)
-                text = new BufferedReader(new InputStreamReader(p.getInputStream(), StandardCharsets.UTF_8)).lines()
-                        .collect(Collectors.joining("\n"));
-            if(!Strings.isNullOrEmpty(text)) {
+            text = "" + new BufferedReader(new InputStreamReader(p.getInputStream(), StandardCharsets.UTF_8)).lines()
+                        .collect(Collectors.joining("\n")) + new BufferedReader(new InputStreamReader(p.getErrorStream(), StandardCharsets.UTF_8)).lines()
+                    .collect(Collectors.joining("\n"));
+            if(retval == 0 && !Strings.isNullOrEmpty(text)) {
                 Main.log.info("Proxy works!");
                 return true;
             }
             else {
-                Main.log.info("Proxy doesn't work!");
+                Main.log.info(String.format("Proxy %s failed. Return code: %d, Output: %s", hostname, retval, text));
                 return false;
             }
         }
         catch(Exception e) {
             Main.log.info("Exception received trying to test proxy!");
+            Main.logSevere(e);
             return false;
         }
     }

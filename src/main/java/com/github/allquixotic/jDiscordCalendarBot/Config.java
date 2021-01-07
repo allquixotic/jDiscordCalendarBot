@@ -21,6 +21,9 @@ public class Config {
     @Key private String proxyListApi;
     @Key private String proxyUsername;
     @Key private String proxyPassword;
+    @Key private String curlPath;
+    @Key private String silent;
+    @Key private String curlExtra;
     @Key private int proxyPort;
     @Key private int updateFrequency;
     @Key private int maxLoadFactor;

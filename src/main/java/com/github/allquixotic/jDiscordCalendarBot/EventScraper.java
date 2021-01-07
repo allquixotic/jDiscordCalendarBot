@@ -12,12 +12,10 @@ import org.mapdb.*;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedHashSet;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -47,11 +45,12 @@ public class EventScraper {
     private static final String xpLoginButton = "//input[@type='submit' and @value='Login']";
     private static final String xpMonth = "//div[contains(@class, 'calendar-container')]/div[contains(@class, 'block-title')]/div[contains(@class, 'text')]/span[contains(@class, 'mask')]";
     private static final String xpDayTd = "//td[contains(@class, 'fc-day')]";
-    private static final String xpDayNumber = "div[contains(@class, 'fc-day-number')]";
+    private static final String xpDayNumber = "xpath=div[contains(@class, 'fc-day-number')]";
     private static final String csEventBoxesImage = ".fc-event-image > .desc";
     private static final String csEventBoxes = ".fc-event";
     private static final Pattern classRx = Pattern.compile(".*fc-day(\\d+).*");
     private static final DateTimeFormatter mmmmyyyy = DateTimeFormatter.ofPattern("MMMM yyyy");
+    public static final DateTimeFormatter hmma = DateTimeFormatter.ofPattern("h:mma");
 
     public EventScraper(@NonNull Config c) {
         conf = c;
@@ -64,7 +63,7 @@ public class EventScraper {
         //Playwright
         pw = Playwright.create();
         ff = pw.firefox();
-        lo = new BrowserType.LaunchOptions().withHeadless(true);
+        lo = new BrowserType.LaunchOptions().withHeadless(true).setProxy().withServer("per-context").done();
         browser = ff.launch(lo);
         context = browser.newContext();
 
@@ -76,15 +75,16 @@ public class EventScraper {
     }
 
     public Calen getCalendar(LocalDate when, boolean forceUpdate) {
-        if(forceUpdate || lastRun == null || lastRun.get().isBefore(LocalDateTime.now().minusSeconds(conf.getUpdateFrequency()))) {
+        if(forceUpdate || lastRun == null || lastRun.get() == null || lastRun.get().isBefore(LocalDateTime.now().minusSeconds(conf.getUpdateFrequency()))) {
             Main.log.info("Need to update.");
             update();
+            Main.log.info("Update complete.");
         }
         else {
             Main.log.info("No calendar update needed.");
         }
 
-        return events.get(when);
+        return events.containsKey(when) ? events.get(when) : null;
     }
 
     private Page.WaitForSelectorOptions waitFor(int seconds) {
@@ -115,10 +115,10 @@ public class EventScraper {
 
                 //Page setup
                 var npo = new Browser.NewPageOptions();
-                npo = npo.proxy.withServer(String.format("https://%s:%d", currentProxy, conf.getProxyPort())).withUsername(conf.getProxyUsername()).withPassword(conf.getProxyPassword()).done();
+                npo.setProxy().withServer(String.format("https://%s:%d", currentProxy, conf.getProxyPort())).withUsername(conf.getProxyUsername()).withPassword(conf.getProxyPassword()).done();
                 page = browser.newPage(npo);
                 page.setViewportSize(1920, 1080);
-                page.setDefaultNavigationTimeout(120);
+                page.setDefaultNavigationTimeout(120 * 1000);
 
                 //Repeatedly try to log in up to 3 times
                 page.navigate(conf.getCalendarUrl()).finished();
@@ -157,14 +157,21 @@ public class EventScraper {
                     val mainMonth = YearMonth.parse(dateElement.textContent(), mmmmyyyy).atDay(1);
                     val days = new ArrayList<MyDay>();
                     Main.sleepOrExit(20);
-                    var dayElements = page.querySelectorAll(xpDayNumber);
+                    var dayElements = page.querySelectorAll(xpDayTd);
                     for(var dayElement : dayElements) {
                         var itsClass = dayElement.getAttribute("class");
-                        var dayNum = Integer.parseInt(classRx.matcher(itsClass).group(1));
-                        var dayns = dayElement.querySelectorAll(xpDayNumber);
-                        var daynstr = dayns.get(0).textContent();
-                        var dom = Integer.parseInt(daynstr);
-                        days.add(dayNum, MyDay.builder().element(dayElement).dayOfMonth(dom).month(null).year(null).date(null).build());
+                        var matcher = classRx.matcher(itsClass);
+                        if(matcher.find()) {
+                            var dayNum = Integer.parseInt(matcher.group(1));
+                            var dayns = dayElement.querySelectorAll(xpDayNumber);
+                            var daynstr = dayns.get(0).textContent();
+                            var dom = Integer.parseInt(daynstr);
+                            days.add(dayNum, MyDay.builder().element(dayElement).dayOfMonth(dom).month(null).year(null).date(null).build());
+                        }
+                        else {
+                            throw new RuntimeException("Code-up error: can't find required class in " + itsClass);
+                        }
+
                     }
 
                     //Fill in month and year for each cell in table
@@ -195,6 +202,7 @@ public class EventScraper {
                             }
                         }
                         day.setDate(LocalDate.of(day.getYear(), day.getMonth(), day.getDayOfMonth()));
+                        Main.log.info("Found date " + day.toString());
                     }
 
                     //Get all the event box elements from the page
@@ -220,20 +228,33 @@ public class EventScraper {
                                     var dd = day.getDate();
                                     //Scrape values
                                     var evt = parseFunc.apply(eventBox);
-                                    if(!Strings.isNullOrEmpty(evt.getTime())) {
+                                    if(evt.getTime() != null) {
                                         if(events.containsKey(dd)) {
                                             //Put event in existing Calen
-                                            var evts = events.get(dd).getEvents();
-                                            if(evts == null) {
-                                                evts = new LinkedHashSet<>();
+                                            if(events.get(dd) == null) {
+                                                Main.log.info("Putting new Calen for existing key " + dd.toString());
+                                                events.put(dd, Calen.builder()
+                                                        .date(dd)
+                                                        .events(Sets.newTreeSet(Arrays.asList(evt)))
+                                                        .build());
                                             }
-                                            evts.add(evt);
+                                            else {
+                                                Main.log.info("Updating Calen for " + dd.toString());
+                                                var caln = events.get(dd);
+                                                var evts = caln.getEvents();
+                                                if (evts == null) {
+                                                    evts = new TreeSet<>();
+                                                }
+                                                evts.add(evt);
+                                                events.put(dd, caln);
+                                            }
                                         }
                                         else {
                                             //New Calen needed
+                                            Main.log.info("Putting new Calen for non-existent key " + dd.toString());
                                             events.put(dd, Calen.builder()
                                                     .date(dd)
-                                                    .events(Sets.newLinkedHashSet(Arrays.asList(evt)))
+                                                    .events(Sets.newTreeSet(Arrays.asList(evt)))
                                                     .build());
                                         }
                                     }
@@ -254,8 +275,8 @@ public class EventScraper {
                     processEltsFunc.accept(eventBoxes, (elt) -> {
                         var time = "";
                         try {
-                            var times = elt.querySelectorAll("a/span[contains(@class,'fc-event-time')]");
-                            time = times.get(0).textContent();
+                            var times = elt.querySelectorAll("xpath=a/span[contains(@class,'fc-event-time')]");
+                            time = reifyTime(times.get(0).textContent());
                         }
                         catch(Exception e) {
                             //Deliberately squelch
@@ -263,22 +284,23 @@ public class EventScraper {
                         return Evt.builder()
                                 .name(elt.querySelector(".fc-event-title").innerText())
                                 .recurs(time.startsWith("R"))
-                                .time(time.replace("R", "")).build();
+                                .time(LocalTime.parse(time.replace("R", ""), hmma)).build();
                     });
 
                     //Process all the image event boxes
                     processEltsFunc.accept(eventBoxesImage, (elt) -> {
                         var descWrapperText = elt.querySelector(".desc-wrapper").innerText();
                         var lines = descWrapperText.split("\n");
-                        var name = ((String[])Arrays.stream(lines).skip(1).toArray());
+                        var name = Arrays.copyOfRange(lines, 1, lines.length);
                         return Evt.builder()
                                 .name(String.join(" ", name))
-                                .time(lines[0].replace("R", ""))
+                                .time(LocalTime.parse(reifyTime(lines[0].replace("R", "")), hmma))
                                 .recurs(descWrapperText.startsWith("R"))
                                 .build();
                     });
 
                     //TODO: Sort each day's events by their time
+
                 }
                 else {
                     throw new RuntimeException("ERROR: Wasn't able to get the current month!");
@@ -303,6 +325,18 @@ public class EventScraper {
             }
         }
         while(error);
+    }
+
+    private String reifyTime(String input) {
+        var uc = input.toUpperCase().replace(" ", "");
+        if(uc.startsWith("0")) {
+            uc = uc.substring(1);
+        }
+        return uc + (uc.endsWith("M") ? "" : "M");
+    }
+
+    public void updateCalen(LocalDate key, Calen value) {
+        events.put(key, value);
     }
 
     private boolean filterFunc(ElementHandle ebox) {

@@ -4,24 +4,25 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.val;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.LinkedHashSet;
+import java.util.TreeSet;
 
 @Data @Builder
-public class Calen {
+public class Calen implements Serializable {
     private LocalDate date;
     private String messageId;
-    private LinkedHashSet<Evt> events;
+    private TreeSet<Evt> events;
 
     private static final DateTimeFormatter fmt = DateTimeFormatter.ofPattern("EEEE MM/dd/YYYY");
 
     @Override
     public String toString() {
         val sb = new StringBuilder();
-        sb.append("Here is");
+        sb.append("Here is ");
         if(date.equals(LocalDate.now())) {
-            sb.append("TODAY, ");
+            sb.append("**TODAY**, ");
         }
         else if(date.equals(LocalDate.now().plusDays(1L))) {
             sb.append("TOMORROW, ");
@@ -32,11 +33,13 @@ public class Calen {
 
         sb.append(date.format(fmt));
 
-        sb.append("'s calendar.");
+        sb.append("'s calendar.\n");
 
         for(Evt e : events) {
             sb.append(e.toString()).append("\n");
         }
+
+        sb.append("--------------------------");
 
         return sb.toString();
     }

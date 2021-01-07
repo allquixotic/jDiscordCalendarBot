@@ -38,26 +38,36 @@ public class Main {
                     scraper.getCalendar(LocalDate.now().plusDays(1))
             };
 
+            var eye = 0;
             for(val calen : calens) {
                 if(calen != null) {
                     if(!Strings.isNullOrEmpty(calen.getMessageId())) {
                         try {
                             val msg = gateway.getMessageById(Snowflake.of(conf.getDiscordChannel()), Snowflake.of(calen.getMessageId())).block();
-                            msg.edit((mes) -> {
-                                mes.setContent(calen.toString());
-                            });
+                            val theMsg = msg.getContent();
+                            if(!calen.toString().trim().equalsIgnoreCase(theMsg)) {
+                                msg.edit((mes) -> {
+                                    mes.setContent(calen.toString());
+                                });
+                            }
                         }
                         catch(Exception e) {
                             Main.logSevere(e);
                             val newMsg = chan.getRestChannel().createMessage(calen.toString()).block();
                             calen.setMessageId(newMsg.id());
+                            scraper.updateCalen(calen.getDate(), calen);
                         }
                     }
                     else {
                         val newMsg = chan.getRestChannel().createMessage(calen.toString()).block();
                         calen.setMessageId(newMsg.id());
+                        scraper.updateCalen(calen.getDate(), calen);
                     }
                 }
+                else {
+                    log.info("Calen null: " + eye);
+                }
+                eye++;
             }
         };
 
@@ -78,7 +88,7 @@ public class Main {
             log.info("Discord Ready event received.");
             client.getCoreResources().getReactorResources().getTimerTaskScheduler().schedulePeriodically(() -> {
                 pool.submit(post);
-            }, 0, 2, TimeUnit.HOURS);
+            }, 0, 15, TimeUnit.MINUTES);
         });
     }
 
@@ -87,7 +97,7 @@ public class Main {
         PrintWriter pw = new PrintWriter(sw);
         pw.println(t.getMessage());
         t.printStackTrace(pw);
-        return pw.toString();
+        return sw.toString();
     }
 
     public static void logSevere(String context, Throwable t) {

@@ -1,10 +1,9 @@
 package com.github.allquixotic.jDiscordCalendarBot;
 
 import com.google.api.client.util.Key;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 
-@Data @Builder
+@Data @NoArgsConstructor @AllArgsConstructor
 public class NordService {
     @Key
     private String identifier;
