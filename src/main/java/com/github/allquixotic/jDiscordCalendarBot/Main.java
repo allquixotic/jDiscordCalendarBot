@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
@@ -46,6 +47,7 @@ public class Main {
                             val msg = gateway.getMessageById(Snowflake.of(conf.getDiscordChannel()), Snowflake.of(calen.getMessageId())).block();
                             val theMsg = msg.getContent();
                             if(!calen.toString().trim().equalsIgnoreCase(theMsg)) {
+                                log.info("Updating message for " + calen.getDate().format(DateTimeFormatter.ISO_LOCAL_DATE));
                                 msg.edit((mes) -> {
                                     mes.setContent(calen.toString());
                                 });
