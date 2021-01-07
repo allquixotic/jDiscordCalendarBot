@@ -77,12 +77,20 @@ public class Main {
 
             try {
                 val obs = scraper.getCalendar(LocalDate.now().minusDays(2));
-                val obsolete = obs.getMessageId();
-                if(obsolete != null) {
-                    val om = gateway.getMessageById(Snowflake.of(conf.getDiscordChannel()), Snowflake.of(obsolete)).block();
-                    om.getRestMessage().delete("Obsolete message deleted by Calendar bot").block();
-                    obs.setMessageId(null);
-                    scraper.updateCalen(obs.getDate(), obs);
+                if(obs != null) {
+                    val obsolete = obs.getMessageId();
+                    if(obsolete != null) {
+                        val rm = chan.getRestChannel().getRestMessage(Snowflake.of(obsolete));
+                        rm.delete("Obsolete message deleted by Calendar bot").block();
+                        obs.setMessageId(null);
+                        scraper.updateCalen(obs.getDate(), obs);
+                    }
+                    else {
+                        log.info("No obsolete message ID present on Calen.");
+                    }
+                }
+                else {
+                    log.info("DB didn't have a calendar record for obsolete day.");
                 }
             }
             catch(Exception ee) {
