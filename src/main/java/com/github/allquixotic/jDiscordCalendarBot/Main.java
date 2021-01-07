@@ -38,7 +38,6 @@ public class Main {
             val chan = gateway.getChannelById(Snowflake.of(conf.getDiscordChannel())).block();
             log.info("Got the channel we're working on.");
             val calens = new Calen[] {
-                    scraper.getCalendar(LocalDate.now().minusDays(2)),
                     scraper.getCalendar(LocalDate.now().minusDays(1)),
                     scraper.getCalendar(LocalDate.now()),
                     scraper.getCalendar(LocalDate.now().plusDays(1))
@@ -74,6 +73,18 @@ public class Main {
                     log.info("Calen null: " + eye);
                 }
                 eye++;
+            }
+
+            try {
+                val obs = scraper.getCalendar(LocalDate.now().minusDays(2));
+                val obsolete = obs.getMessageId();
+                val om = gateway.getMessageById(Snowflake.of(conf.getDiscordChannel()), Snowflake.of(obsolete)).block();
+                om.delete();
+                obs.setMessageId(null);
+                scraper.updateCalen(obs.getDate(), obs);
+            }
+            catch(Exception ee) {
+
             }
         };
 
