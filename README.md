@@ -12,6 +12,7 @@ Handles "flakiness" with external servers **much** better than njDiscordCalendar
 Also have it hooked up to systemd and configured to restart if it crashes, so it's only really beholden to the physical hardware's reliability.
 
 To-Do:
+
 [] Convert MapDB usage over to use transactions.
 [] Replace some hairy repeated tracts of code with helper functions or reusable lambdas (DRY).
 [] Add back !events feature like njDiscordCalendarBot.
