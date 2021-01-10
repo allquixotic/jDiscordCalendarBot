@@ -101,11 +101,12 @@ public class Main {
         gateway.onDisconnect().repeat(() -> {
             while(true) {
                 try {
+                    sleepOrExit(15 * 60);
                     client.login().block();
                     break;
                 } catch (Exception e) {
                     logSevere(e);
-                    sleepOrExit(5 * 60);
+                    sleepOrExit(10 * 60);
                 }
             }
             return true;

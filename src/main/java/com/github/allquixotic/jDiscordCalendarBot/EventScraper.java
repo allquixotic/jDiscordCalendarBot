@@ -339,6 +339,7 @@ public class EventScraper {
                 //Clean up page every time
                 page.close();
                 page = null;
+                //db.commit();
             }
         }
         while(error);
