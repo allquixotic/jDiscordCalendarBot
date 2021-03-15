@@ -276,6 +276,14 @@ public class EventScraper {
                         }
                     };
 
+                    //Before running the BiConsumer to process the event boxes, clear all Calens to account for changed/nuked events
+                    events.values().forEach((calenValue) -> {
+                        val evts = calenValue.getEvents();
+                        if(evts != null) {
+                            evts.clear();
+                        }
+                    });
+
                     //Process all the non-image event boxes
                     processEltsFunc.accept(eventBoxes, (elt) -> {
                         var time = "";
