@@ -277,10 +277,11 @@ public class EventScraper {
                     };
 
                     //Before running the BiConsumer to process the event boxes, clear all Calens to account for changed/nuked events
-                    events.values().forEach((calenValue) -> {
-                        val evts = calenValue.getEvents();
+                    events.entrySet().forEach((calenValue) -> {
+                        val evts = calenValue.getValue().getEvents();
                         if(evts != null) {
                             evts.clear();
+                            events.put(calenValue.getKey(), calenValue.getValue());
                         }
                     });
 
