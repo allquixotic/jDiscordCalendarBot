@@ -26,10 +26,10 @@ public class Calen implements Serializable {
             sb.append("\uD83D\uDCCC **TODAY**, ");
         }
         else if(date.equals(LocalDate.now().plusDays(1L))) {
-            sb.append("➡️ TOMORROW, ");
+            sb.append("\u27A1\uFE0FTOMORROW, ");
         }
         else if(date.equals(LocalDate.now().minusDays(1L))) {
-            sb.append("⬅️YESTERDAY, ");
+            sb.append("\u2B05\uFE0FYESTERDAY, ");
         }
 
         sb.append(date.format(fmt));
