@@ -2,8 +2,6 @@ package com.github.allquixotic.jDiscordCalendarBot;
 
 import lombok.Builder;
 import lombok.Data;
-import org.jetbrains.annotations.NotNull;
-
 import java.io.Serializable;
 import java.time.LocalTime;
 

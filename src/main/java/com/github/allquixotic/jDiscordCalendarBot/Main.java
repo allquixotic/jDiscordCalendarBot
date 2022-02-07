@@ -4,10 +4,7 @@ import com.google.api.client.util.Strings;
 import discord4j.common.util.Snowflake;
 import discord4j.core.DiscordClient;
 import discord4j.core.event.domain.lifecycle.ReadyEvent;
-import discord4j.discordjson.json.AllowedMentionsData;
-import discord4j.discordjson.json.EmbedData;
 import discord4j.discordjson.json.MessageEditRequest;
-import discord4j.discordjson.possible.Possible;
 import discord4j.gateway.intent.Intent;
 import discord4j.gateway.intent.IntentSet;
 import lombok.val;
@@ -17,7 +14,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
@@ -59,13 +55,13 @@ public class Main {
                         catch(Exception e) {
                             Main.logSevere(e);
                             val newMsg = chan.getRestChannel().createMessage(calen.toString()).block();
-                            calen.setMessageId(newMsg.id());
+                            calen.setMessageId(newMsg.id().asString());
                             scraper.updateCalen(calen.getDate(), calen);
                         }
                     }
                     else {
                         val newMsg = chan.getRestChannel().createMessage(calen.toString()).block();
-                        calen.setMessageId(newMsg.id());
+                        calen.setMessageId(newMsg.id().asString());
                         scraper.updateCalen(calen.getDate(), calen);
                     }
                 }

@@ -3,6 +3,8 @@ package com.github.allquixotic.jDiscordCalendarBot;
 import com.google.api.client.util.Strings;
 import com.google.common.collect.Sets;
 import com.microsoft.playwright.*;
+import com.microsoft.playwright.options.Proxy;
+
 import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
@@ -64,7 +66,7 @@ public class EventScraper {
         //Playwright
         pw = Playwright.create();
         ff = pw.firefox();
-        lo = new BrowserType.LaunchOptions().withHeadless(true).setProxy().withServer("per-context").done();
+        lo = new BrowserType.LaunchOptions().setHeadless(true).setProxy(new Proxy("per-context"));
         browser = ff.launch(lo);
         context = browser.newContext();
 
@@ -89,7 +91,7 @@ public class EventScraper {
     }
 
     private Page.WaitForSelectorOptions waitFor(int seconds) {
-        return new Page.WaitForSelectorOptions().withTimeout(1000 * seconds);
+        return new Page.WaitForSelectorOptions().setTimeout(1000 * seconds);
     }
 
     private void update() {
@@ -116,7 +118,7 @@ public class EventScraper {
 
                 //Page setup
                 var npo = new Browser.NewPageOptions();
-                npo.setProxy().withServer(String.format("https://%s:%d", currentProxy, conf.getProxyPort())).withUsername(conf.getProxyUsername()).withPassword(conf.getProxyPassword()).done();
+                npo.setProxy(new Proxy(String.format("https://%s:%d", currentProxy, conf.getProxyPort())).setUsername(conf.getProxyUsername()).setPassword(conf.getProxyPassword()));
                 page = browser.newPage(npo);
                 page.setViewportSize(1920, 1080);
                 page.setDefaultNavigationTimeout(120 * 1000);
