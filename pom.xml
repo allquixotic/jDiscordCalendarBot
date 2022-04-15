@@ -17,7 +17,7 @@
         <dependency>
             <groupId>com.microsoft.playwright</groupId>
             <artifactId>playwright</artifactId>
-            <version>1.18.0</version>
+            <version>1.20.1</version>
         </dependency>
         <dependency>
             <groupId>com.discord4j</groupId>
